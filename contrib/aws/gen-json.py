@@ -9,6 +9,7 @@ import copy
 parser = argparse.ArgumentParser()
 parser.add_argument('--channel', help='the CoreOS channel to use', default='stable')
 parser.add_argument('--version', help='the CoreOS version to use', default='current')
+parser.add_argument('--stack-name', help='the stack name', default='deis')
 args = vars(parser.parse_args())
 
 CURR_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -89,6 +90,12 @@ def coreos_amis(channel, version):
 
     return dict(map(lambda n: (n['name'], dict(PV=n['pv'], HVM=n['hvm'])), amis['amis']))
 
+def update_tag_name(tags):
+    for tag in tags:
+      if tag['Key'] == 'Name':
+        tag['Value'] = args['stack_name'] + " " + tag['Value']
+        break
+
 new_units = [
     dict({'name': 'format-docker-volume.service', 'command': 'start', 'content': FORMAT_DOCKER_VOLUME}),
     dict({'name': 'var-lib-docker.mount', 'command': 'start', 'content': MOUNT_DOCKER_VOLUME}),
@@ -127,6 +134,19 @@ template['Resources']['CoreOSServerProdLaunchConfig']['Properties']['UserData'][
 template['Parameters']['ClusterSize']['Default'] = str(os.getenv('DEIS_NUM_INSTANCES', 2))
 template['Parameters']['ProdClusterSize']['Default'] = str(1)
 template['Mappings']['CoreOSAMIs'] = coreos_amis(args['channel'], args['version'])
+
+# update tags with stack-name
+update_tag_name(template['Resources']['VPC']['Properties']['Tags'])
+update_tag_name(template['Resources']['Subnet1']['Properties']['Tags'])
+update_tag_name(template['Resources']['Subnet2']['Properties']['Tags'])
+update_tag_name(template['Resources']['Subnet3']['Properties']['Tags'])
+update_tag_name(template['Resources']['Subnet4']['Properties']['Tags'])
+update_tag_name(template['Resources']['InternetGateway']['Properties']['Tags'])
+update_tag_name(template['Resources']['PublicRouteTable']['Properties']['Tags'])
+update_tag_name(template['Resources']['CoreOSServerAutoScale']['Properties']['Tags'])
+update_tag_name(template['Resources']['CoreOSServerProdAutoScale']['Properties']['Tags'])
+update_tag_name(template['Resources']['DeisWebELBSecurityGroup']['Properties']['Tags'])
+update_tag_name(template['Resources']['VPCSecurityGroup']['Properties']['Tags'])
 
 VPC_ID = os.getenv('VPC_ID', None)
 VPC_SUBNETS = os.getenv('VPC_SUBNETS', None)

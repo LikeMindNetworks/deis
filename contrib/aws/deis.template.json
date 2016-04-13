@@ -168,7 +168,7 @@
         "InstanceTenancy" : "dedicated",
         "CidrBlock" : { "Fn::FindInMap" : [ "SubnetConfig", "VPC", "CIDR" ]},
         "Tags" : [
-          { "Key" : "Name", "Value" : "Deis VPC" },
+          { "Key" : "Name", "Value" : "VPC" },
           { "Key" : "Application", "Value" : "Deis" }
         ]
       }
@@ -180,7 +180,7 @@
         "AvailabilityZone": { "Fn::Select" : [ 0, { "Fn::GetAZs" : "" } ] },
         "CidrBlock" : { "Fn::FindInMap" : [ "SubnetConfig", "Subnet1", "CIDR" ]},
         "Tags" : [
-          { "Key" : "Name", "Value" : "Deis Subnet1" },
+          { "Key" : "Name", "Value" : "Subnet1" },
           { "Key" : "Application", "Value" : "Deis" },
           { "Key" : "Network", "Value" : "Private" }
         ]
@@ -193,7 +193,7 @@
         "AvailabilityZone": { "Fn::Select" : [ 1, { "Fn::GetAZs" : "" } ] },
         "CidrBlock" : { "Fn::FindInMap" : [ "SubnetConfig", "Subnet2", "CIDR" ]},
         "Tags" : [
-          { "Key" : "Name", "Value" : "Deis Subnet2" },
+          { "Key" : "Name", "Value" : "Subnet2" },
           { "Key" : "Application", "Value" : "Deis" },
           { "Key" : "Network", "Value" : "Private" }
         ]
@@ -206,7 +206,7 @@
         "AvailabilityZone": { "Fn::Select" : [ 2, { "Fn::GetAZs" : "" } ] },
         "CidrBlock" : { "Fn::FindInMap" : [ "SubnetConfig", "Subnet3", "CIDR" ]},
         "Tags" : [
-          { "Key" : "Name", "Value" : "Deis Subnet3" },
+          { "Key" : "Name", "Value" : "Subnet3" },
           { "Key" : "Application", "Value" : "Deis" },
           { "Key" : "Network", "Value" : "Private" }
         ]
@@ -219,7 +219,7 @@
         "AvailabilityZone": { "Fn::Select" : [ 3, { "Fn::GetAZs" : "" } ] },
         "CidrBlock" : { "Fn::FindInMap" : [ "SubnetConfig", "Subnet4", "CIDR" ]},
         "Tags" : [
-          { "Key" : "Name", "Value" : "Deis Subnet4" },
+          { "Key" : "Name", "Value" : "Subnet4" },
           { "Key" : "Application", "Value" : "Deis" },
           { "Key" : "Network", "Value" : "Private" }
         ]
@@ -229,7 +229,7 @@
       "Type" : "AWS::EC2::InternetGateway",
       "Properties" : {
         "Tags" : [
-          { "Key" : "Name", "Value" : "Deis Internet Gateway" },
+          { "Key" : "Name", "Value" : "Internet Gateway" },
           { "Key" : "Application", "Value" : "Deis" },
           { "Key" : "Network", "Value" : "Public" }
         ]
@@ -248,7 +248,7 @@
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
         "Tags" : [
-          { "Key" : "Name", "Value" : "Deis Route Table" },
+          { "Key" : "Name", "Value" : "Route Table" },
           { "Key" : "Application", "Value" : "Deis" },
           { "Key" : "Network", "Value" : "Public" }
         ]
@@ -311,7 +311,7 @@
         "MaxSize": "12",
         "DesiredCapacity": {"Ref": "ClusterSize"},
         "Tags": [
-            {"Key": "Name", "Value": "Deis", "PropagateAtLaunch": true}
+            {"Key" : "Name", "Value": "Dev", "PropagateAtLaunch": true}
         ],
         "LoadBalancerNames": [
           { "Ref": "DeisWebELB" }
@@ -371,7 +371,7 @@
         "MaxSize": "12",
         "DesiredCapacity": {"Ref": "ProdClusterSize"},
         "Tags": [
-            {"Key": "Name", "Value": "Deis-Prod", "PropagateAtLaunch": true}
+            {"Key" : "Name", "Value": "Prod", "PropagateAtLaunch": true}
         ],
         "LoadBalancerNames": [
           { "Ref": "DeisWebELB" }
@@ -479,7 +479,7 @@
         ],
         "VpcId": { "Ref" : "VPC" },
         "Tags" : [
-          { "Key" : "Name", "Value" : "Deis ELB SecurityGroup" }
+          { "Key" : "Name", "Value" : "ELB SecurityGroup" }
         ]
       }
     },
@@ -496,7 +496,7 @@
         ],
         "VpcId" : { "Ref" : "VPC" },
         "Tags" : [
-          { "Key" : "Name", "Value" : "Deis Intra-VPC SecurityGroup" }
+          { "Key" : "Name", "Value" : "Intra-VPC SecurityGroup" }
         ]
       }
     },

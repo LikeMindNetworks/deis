@@ -49,7 +49,7 @@ bailout() {
 
 # create an AWS cloudformation stack based on CoreOS's default template
 aws cloudformation create-stack \
-    --template-body "$($THIS_DIR/gen-json.py --channel $COREOS_CHANNEL --version $COREOS_VERSION)" \
+    --template-body "$($THIS_DIR/gen-json.py --channel $COREOS_CHANNEL --version $COREOS_VERSION --stack-name $STACK_NAME)" \
     --stack-name $STACK_NAME \
     --parameters "$(<$THIS_DIR/cloudformation.json)" \
     --stack-policy-body "$(<$THIS_DIR/stack_policy.json)" \
