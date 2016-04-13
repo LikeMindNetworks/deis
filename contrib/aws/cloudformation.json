@@ -9,7 +9,7 @@
   },
   {
     "ParameterKey": "InstanceType",
-    "ParameterValue": "t2.medium"
+    "ParameterValue": "m3.medium"
   },
   {
     "ParameterKey": "RootVolumeSize",
@@ -17,7 +17,7 @@
   },
   {
     "ParameterKey": "DockerVolumeSize",
-    "ParameterValue": "120"
+    "ParameterValue": "100"
   },
   {
     "ParameterKey": "EtcdVolumeSize",

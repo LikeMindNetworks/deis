@@ -142,7 +142,9 @@
     "SubnetConfig" : {
       "VPC"     : { "CIDR" : "10.21.0.0/16" },
       "Subnet1" : { "CIDR" : "10.21.1.0/24" },
-      "Subnet2" : { "CIDR" : "10.21.2.0/24" }
+      "Subnet2" : { "CIDR" : "10.21.2.0/24" },
+      "Subnet3" : { "CIDR" : "10.21.3.0/24" },
+      "Subnet4" : { "CIDR" : "10.21.4.0/24" }
     }
   },
 
@@ -163,8 +165,10 @@
       "Properties" : {
         "EnableDnsSupport" : "true",
         "EnableDnsHostnames" : "true",
+        "InstanceTenancy" : "dedicated",
         "CidrBlock" : { "Fn::FindInMap" : [ "SubnetConfig", "VPC", "CIDR" ]},
         "Tags" : [
+          { "Key" : "Name", "Value" : "Deis VPC" },
           { "Key" : "Application", "Value" : "Deis" }
         ]
       }
@@ -176,6 +180,7 @@
         "AvailabilityZone": { "Fn::Select" : [ 0, { "Fn::GetAZs" : "" } ] },
         "CidrBlock" : { "Fn::FindInMap" : [ "SubnetConfig", "Subnet1", "CIDR" ]},
         "Tags" : [
+          { "Key" : "Name", "Value" : "Deis Subnet1" },
           { "Key" : "Application", "Value" : "Deis" },
           { "Key" : "Network", "Value" : "Private" }
         ]
@@ -188,6 +193,33 @@
         "AvailabilityZone": { "Fn::Select" : [ 1, { "Fn::GetAZs" : "" } ] },
         "CidrBlock" : { "Fn::FindInMap" : [ "SubnetConfig", "Subnet2", "CIDR" ]},
         "Tags" : [
+          { "Key" : "Name", "Value" : "Deis Subnet2" },
+          { "Key" : "Application", "Value" : "Deis" },
+          { "Key" : "Network", "Value" : "Private" }
+        ]
+      }
+    },
+    "Subnet3" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "AvailabilityZone": { "Fn::Select" : [ 2, { "Fn::GetAZs" : "" } ] },
+        "CidrBlock" : { "Fn::FindInMap" : [ "SubnetConfig", "Subnet3", "CIDR" ]},
+        "Tags" : [
+          { "Key" : "Name", "Value" : "Deis Subnet3" },
+          { "Key" : "Application", "Value" : "Deis" },
+          { "Key" : "Network", "Value" : "Private" }
+        ]
+      }
+    },
+    "Subnet4" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "AvailabilityZone": { "Fn::Select" : [ 3, { "Fn::GetAZs" : "" } ] },
+        "CidrBlock" : { "Fn::FindInMap" : [ "SubnetConfig", "Subnet4", "CIDR" ]},
+        "Tags" : [
+          { "Key" : "Name", "Value" : "Deis Subnet4" },
           { "Key" : "Application", "Value" : "Deis" },
           { "Key" : "Network", "Value" : "Private" }
         ]
@@ -197,6 +229,7 @@
       "Type" : "AWS::EC2::InternetGateway",
       "Properties" : {
         "Tags" : [
+          { "Key" : "Name", "Value" : "Deis Internet Gateway" },
           { "Key" : "Application", "Value" : "Deis" },
           { "Key" : "Network", "Value" : "Public" }
         ]
@@ -215,6 +248,7 @@
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
         "Tags" : [
+          { "Key" : "Name", "Value" : "Deis Route Table" },
           { "Key" : "Application", "Value" : "Deis" },
           { "Key" : "Network", "Value" : "Public" }
         ]
@@ -243,16 +277,34 @@
         "RouteTableId" : { "Ref" : "PublicRouteTable" }
       }
     },
+    "Subnet3RouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "Subnet3" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+    "Subnet4RouteTableAssociation" : {
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "Subnet4" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
     "CoreOSServerAutoScale": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
         "AvailabilityZones": [
           { "Fn::GetAtt" : [ "Subnet1", "AvailabilityZone" ] },
-          { "Fn::GetAtt" : [ "Subnet2", "AvailabilityZone" ] }
+          { "Fn::GetAtt" : [ "Subnet2", "AvailabilityZone" ] },
+          { "Fn::GetAtt" : [ "Subnet3", "AvailabilityZone" ] },
+          { "Fn::GetAtt" : [ "Subnet4", "AvailabilityZone" ] }
         ],
         "VPCZoneIdentifier": [
           { "Ref" : "Subnet1" },
-          { "Ref" : "Subnet2" }
+          { "Ref" : "Subnet2" },
+          { "Ref" : "Subnet3" },
+          { "Ref" : "Subnet4" }
         ],
         "LaunchConfigurationName": {"Ref": "CoreOSServerLaunchConfig"},
         "MinSize": "2",
@@ -304,11 +356,15 @@
       "Properties": {
         "AvailabilityZones": [
           { "Fn::GetAtt" : [ "Subnet1", "AvailabilityZone" ] },
-          { "Fn::GetAtt" : [ "Subnet2", "AvailabilityZone" ] }
+          { "Fn::GetAtt" : [ "Subnet2", "AvailabilityZone" ] },
+          { "Fn::GetAtt" : [ "Subnet3", "AvailabilityZone" ] },
+          { "Fn::GetAtt" : [ "Subnet4", "AvailabilityZone" ] }
         ],
         "VPCZoneIdentifier": [
           { "Ref" : "Subnet1" },
-          { "Ref" : "Subnet2" }
+          { "Ref" : "Subnet2" },
+          { "Ref" : "Subnet3" },
+          { "Ref" : "Subnet4" }
         ],
         "LaunchConfigurationName": {"Ref": "CoreOSServerProdLaunchConfig"},
         "MinSize": "1",
@@ -369,7 +425,9 @@
         },
         "Subnets": [
           { "Ref" : "Subnet1" },
-          { "Ref" : "Subnet2" }
+          { "Ref" : "Subnet2" },
+          { "Ref" : "Subnet3" },
+          { "Ref" : "Subnet4" }
         ],
         "Policies" : [{
            "PolicyName" : "EnableProxyProtocol",
@@ -419,7 +477,10 @@
           {"IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "0.0.0.0/0"},
           {"IpProtocol": "tcp", "FromPort": "2222", "ToPort": "2222", "CidrIp": "0.0.0.0/0"}
         ],
-        "VpcId": { "Ref" : "VPC" }
+        "VpcId": { "Ref" : "VPC" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "Deis ELB SecurityGroup" }
+        ]
       }
     },
     "VPCSecurityGroup" : {
@@ -433,7 +494,10 @@
           {"IpProtocol": "tcp", "FromPort": "2222", "ToPort": "2222", "SourceSecurityGroupId": { "Ref": "DeisWebELBSecurityGroup" } },
           {"IpProtocol": "tcp", "FromPort": "9090", "ToPort": "9090", "SourceSecurityGroupId": { "Ref": "DeisWebELBSecurityGroup" } }
         ],
-        "VpcId" : { "Ref" : "VPC" }
+        "VpcId" : { "Ref" : "VPC" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : "Deis Intra-VPC SecurityGroup" }
+        ]
       }
     },
     "VPCSecurityGroupIngress": {
