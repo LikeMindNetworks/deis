@@ -131,8 +131,10 @@ template = json.load(open(os.path.join(CURR_DIR, 'deis.template.json'), 'r'))
 
 template['Resources']['CoreOSServerLaunchConfig']['Properties']['UserData']['Fn::Base64']['Fn::Join'] = ["\n", header + dump.split("\n")]
 template['Resources']['CoreOSServerProdLaunchConfig']['Properties']['UserData']['Fn::Base64']['Fn::Join'] = ["\n", header + dumpProd.split("\n")]
+template['Resources']['CoreOSServerProdLargeLaunchConfig']['Properties']['UserData']['Fn::Base64']['Fn::Join'] = ["\n", header + dumpProd.split("\n")]
 template['Parameters']['ClusterSize']['Default'] = str(os.getenv('DEIS_NUM_INSTANCES', 2))
 template['Parameters']['ProdClusterSize']['Default'] = str(1)
+#template['Parameters']['ProdLargeClusterSize']['Default'] = str(1)
 template['Mappings']['CoreOSAMIs'] = coreos_amis(args['channel'], args['version'])
 
 # update tags with stack-name
@@ -145,6 +147,7 @@ update_tag_name(template['Resources']['InternetGateway']['Properties']['Tags'])
 update_tag_name(template['Resources']['PublicRouteTable']['Properties']['Tags'])
 update_tag_name(template['Resources']['CoreOSServerAutoScale']['Properties']['Tags'])
 update_tag_name(template['Resources']['CoreOSServerProdAutoScale']['Properties']['Tags'])
+update_tag_name(template['Resources']['CoreOSServerProdLargeAutoScale']['Properties']['Tags'])
 update_tag_name(template['Resources']['DeisWebELBSecurityGroup']['Properties']['Tags'])
 update_tag_name(template['Resources']['VPCSecurityGroup']['Properties']['Tags'])
 

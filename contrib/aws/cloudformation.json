@@ -30,5 +30,13 @@
   {
     "ParameterKey": "ProdClusterSize",
     "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "ProdLargeInstanceType",
+    "ParameterValue": "m4.large"
+  },
+  {
+    "ParameterKey": "ProdLargeClusterSize",
+    "ParameterValue": "1"
   }
 ]

@@ -24,6 +24,13 @@
       "Description": "Number of prod nodes in cluster (1-12).",
       "Type": "Number"
     },
+    "ProdLargeClusterSize": {
+      "Default": "1",
+      "MinValue": "1",
+      "MaxValue": "12",
+      "Description": "Number of prod nodes in cluster (1-12).",
+      "Type": "Number"
+    },
     "IamInstanceProfile" : {
       "Description" : "(Optional) Set IAM instance profile for Deis hosts (default: none)",
       "Type" : "String",
@@ -42,6 +49,56 @@
       "Description" : "EC2 instance type (see http://aws.amazon.com/ec2/instance-types/)",
       "Type" : "String",
       "Default" : "m3.large",
+      "AllowedValues" : [
+        "m3.medium",
+        "m3.large",
+        "m3.xlarge",
+        "m3.2xlarge",
+        "m4.large",
+        "m4.xlarge",
+        "m4.2xlarge",
+        "m4.4xlarge",
+        "m4.10xlarge",
+        "m1.medium",
+        "m1.large",
+        "m1.xlarge",
+        "c3.large",
+        "c3.xlarge",
+        "c3.2xlarge",
+        "c3.4xlarge",
+        "c3.8xlarge",
+        "c4.large",
+        "c4.xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge",
+        "c1.medium",
+        "c1.xlarge",
+        "cc2.8xlarge",
+        "g2.2xlarge",
+        "cg1.4xlarge",
+        "m2.xlarge",
+        "m2.4xlarge",
+        "cr1.8xlarge",
+        "hi1.4xlarge",
+        "hs1.8xlarge",
+        "i2.xlarge",
+        "i2.2xlarge",
+        "i2.4xlarge",
+        "i2.8xlarge",
+        "r3.large",
+        "r3.xlarge",
+        "r3.2xlarge",
+        "r3.4xlarge",
+        "r3.8xlarge",
+        "t2.medium"
+      ],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+    "ProdLargeInstanceType" : {
+      "Description" : "EC2 instance type (see http://aws.amazon.com/ec2/instance-types/)",
+      "Type" : "String",
+      "Default" : "m4.large",
       "AllowedValues" : [
         "m3.medium",
         "m3.large",
@@ -384,6 +441,66 @@
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "CoreOSAMIs", { "Ref" : "AWS::Region" }, { "Ref" : "EC2VirtualizationType" }]},
         "InstanceType": {"Ref": "InstanceType"},
+        "IamInstanceProfile" : {
+          "Fn::If" : [
+            "UseIamInstanceProfile",
+            { "Ref" : "IamInstanceProfile" },
+            { "Ref" : "AWS::NoValue" }
+          ]
+        },
+        "KeyName": {"Ref": "KeyPair"},
+        "UserData" : { "Fn::Base64": { "Fn::Join": [ "", [ ] ] } },
+        "AssociatePublicIpAddress": {"Ref": "AssociatePublicIP"},
+        "SecurityGroups": [ { "Fn::GetAtt": ["VPCSecurityGroup", "GroupId"] } ],
+        "BlockDeviceMappings" : [
+          {
+            "DeviceName" : { "Fn::FindInMap": [ "RootDevices", { "Ref": "EC2VirtualizationType" }, "Name" ] },
+            "Ebs" : { "VolumeSize" : { "Ref": "RootVolumeSize" }, "VolumeType": { "Ref": "EC2EBSVolumeType" } }
+          },
+          {
+            "DeviceName" : "/dev/xvdf",
+            "Ebs" : { "VolumeSize" : { "Ref": "DockerVolumeSize" }, "VolumeType": { "Ref": "EC2EBSVolumeType" } }
+          },
+          {
+            "DeviceName" : "/dev/xvdg",
+            "Ebs" : { "VolumeSize" : { "Ref": "EtcdVolumeSize" }, "VolumeType": { "Ref": "EC2EBSVolumeType" } }
+          }
+        ]
+      }
+    },
+    "CoreOSServerProdLargeAutoScale": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AvailabilityZones": [
+          { "Fn::GetAtt" : [ "Subnet1", "AvailabilityZone" ] },
+          { "Fn::GetAtt" : [ "Subnet2", "AvailabilityZone" ] },
+          { "Fn::GetAtt" : [ "Subnet3", "AvailabilityZone" ] },
+          { "Fn::GetAtt" : [ "Subnet4", "AvailabilityZone" ] }
+        ],
+        "VPCZoneIdentifier": [
+          { "Ref" : "Subnet1" },
+          { "Ref" : "Subnet2" },
+          { "Ref" : "Subnet3" },
+          { "Ref" : "Subnet4" }
+        ],
+        "LaunchConfigurationName": {"Ref": "CoreOSServerProdLargeLaunchConfig"},
+        "MinSize": "1",
+        "MaxSize": "12",
+        "DesiredCapacity": {"Ref": "ProdLargeClusterSize"},
+        "Tags": [
+            {"Key" : "Name", "Value": "Prod", "PropagateAtLaunch": true}
+        ],
+        "LoadBalancerNames": [
+          { "Ref": "DeisWebELB" }
+        ]
+      }
+    },
+    "CoreOSServerProdLargeLaunchConfig": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "DependsOn" : "GatewayToInternet",
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "CoreOSAMIs", { "Ref" : "AWS::Region" }, { "Ref" : "EC2VirtualizationType" }]},
+        "InstanceType": {"Ref": "ProdLargeInstanceType"},
         "IamInstanceProfile" : {
           "Fn::If" : [
             "UseIamInstanceProfile",
